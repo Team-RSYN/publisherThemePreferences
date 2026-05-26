@@ -11,7 +11,7 @@ use PKP\db\DAORegistry;
 use PKP\navigationMenu\NavigationMenuItem;
 use PKP\security\Role;
 use APP\journal\Journal;
-use App\journal\JournalDAO;
+use APP\journal\JournalDAO;
 use PKP\reviewForm\ReviewFormDAO;
 use PKP\reviewForm\ReviewFormElementDAO;
 use APP\core\Request;
