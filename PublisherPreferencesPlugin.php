@@ -18,7 +18,6 @@ use APP\core\Application;
 use APP\plugins\generic\publisherPreferences\controllers\grid\PreferredPluginGridHandler;
 use APP\template\TemplateManager;
 use Illuminate\Support\Facades\DB;
-use PKP\core\Registry;
 use PKP\plugins\GenericPlugin;
 use PKP\plugins\Hook;
 use PKP\plugins\PluginRegistry;
@@ -27,7 +26,7 @@ class PublisherPreferencesPlugin extends GenericPlugin {
 
     public function register($category, $path, $mainContextId = null)
     {
-        $success = parent::register($category, $path);
+        $success = parent::register($category, $path, $mainContextId);
 
         if ($success && $this->getEnabled()) {
             Hook::add( 'Context::add', [ $this, 'updateJournalSettings' ] );
@@ -47,11 +46,11 @@ class PublisherPreferencesPlugin extends GenericPlugin {
     }
 
     public function getPreferredPlugins() {
-        return $this->getSetting( \PKP\core\PKPApplication::CONTEXT_ID_NONE, 'preferredPlugins' ) ?: [];
+        return $this->getSetting( \PKP\core\PKPApplication::SITE_CONTEXT_ID, 'preferredPlugins' ) ?: [];
     }
 
     public function setPreferredPlugins($plugins) {
-        $this->updateSetting( \PKP\core\PKPApplication::CONTEXT_ID_NONE, 'preferredPlugins', $plugins );
+        $this->updateSetting( \PKP\core\PKPApplication::SITE_CONTEXT_ID, 'preferredPlugins', $plugins );
     }
 
     /**
@@ -75,12 +74,9 @@ class PublisherPreferencesPlugin extends GenericPlugin {
     {
         $templateMgr = $args[1];
         $output = & $args[2];
-        $request = & Registry::get('request');
-        $dispatcher = $request->getDispatcher();
 
         $templateMgr->registerPlugin('function', 'plugin_url', $this->smartyPluginUrl(...));
         $output .= $templateMgr->fetch($this->getTemplateResource('publisherAppearancesTab.tpl'));
-
 
         return false;
     }
@@ -97,8 +93,6 @@ class PublisherPreferencesPlugin extends GenericPlugin {
     {
         $templateMgr = $args[1];
         $output = & $args[2];
-        $request = & Registry::get('request');
-        $dispatcher = $request->getDispatcher();
 
         $output .= $templateMgr->fetch($this->getTemplateResource('publisherPreferencesTab.tpl'));
 
@@ -110,10 +104,8 @@ class PublisherPreferencesPlugin extends GenericPlugin {
     {
         $templateMgr = $args[1];
         $output = & $args[2];
-        $request = & Registry::get('request');
-        $dispatcher = $request->getDispatcher();
 
-        echo $templateMgr->fetch($this->getTemplateResource('toolsTab.tpl'));
+        $output .= $templateMgr->fetch($this->getTemplateResource('toolsTab.tpl'));
 
         // Permit other plugins to continue interacting with this hook
         return false;
@@ -161,7 +153,7 @@ class PublisherPreferencesPlugin extends GenericPlugin {
         }
 
         // Ensure the theme plugin is enabled in the journal
-        $allThemes = PluginRegistry::loadCategory('themes', true, \PKP\core\PKPApplication::CONTEXT_ID_NONE );
+        $allThemes = PluginRegistry::loadCategory('themes', true, \PKP\core\PKPApplication::SITE_CONTEXT_ID );
         // Also make sure this plugin is loaded so that the journal can't change theme on a temp basis
         $plugins = array_merge( array_keys($allThemes), ['publisherpreferencesplugin', ], $this->getPreferredPlugins() );
         foreach($plugins as $themeName) {
